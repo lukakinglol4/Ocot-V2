@@ -1,0 +1,1 @@
+// This is the main entry point - move main.ts here

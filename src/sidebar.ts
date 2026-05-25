@@ -1,0 +1,1 @@
+// Sidebar module - move sidebar.ts here
