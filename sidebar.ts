@@ -22,6 +22,7 @@ export class ProxySidebar {
       flex-direction: column;
       padding: 0;
       transition: width 0.3s ease;
+      animation: slideInLeft 0.4s ease-out;
     `;
 
     // Create header
@@ -55,7 +56,7 @@ export class ProxySidebar {
     header.title = "Click to return to welcome screen";
     header.innerHTML = `
       <h1 class="sidebar-title">Ocot Client</h1>
-      <p class="sidebar-subtitle">by ASC2563</p>
+      <p class="sidebar-subtitle">by ASC2563 | v2 Enhanced ✨</p>
     `;
 
     // Store reference for external event binding
@@ -81,9 +82,11 @@ export class ProxySidebar {
     // Add hover effect
     this.minimizeButton.addEventListener("mouseenter", () => {
       this.minimizeButton.style.background = "rgba(0, 191, 255, 0.1)";
+      this.minimizeButton.style.transform = "scale(1.05)";
     });
     this.minimizeButton.addEventListener("mouseleave", () => {
       this.minimizeButton.style.background = "transparent";
+      this.minimizeButton.style.transform = "scale(1)";
     });
 
     // Add click handler for minimize toggle
@@ -135,11 +138,13 @@ export class ProxySidebar {
     const tabMetadata = this._getTabMetadata();
 
     // Create navigation buttons in custom order
-    tabOrder.forEach((key) => {
+    tabOrder.forEach((key, index) => {
       const tabData = tabMetadata[key];
       if (tabData) {
-        this.buttons[key] = this.createButton(tabData.label, tabData.icon);
-        this.buttonContainer.appendChild(this.buttons[key]);
+        const btn = this.createButton(tabData.label, tabData.icon);
+        btn.style.animation = `fadeInLeft 0.4s ease-out ${0.05 + index * 0.04}s both`;
+        this.buttons[key] = btn;
+        this.buttonContainer.appendChild(btn);
       }
     });
   }
@@ -217,11 +222,13 @@ export class ProxySidebar {
     const tabOrder = this._getTabOrder();
     const tabMetadata = this._getTabMetadata();
 
-    tabOrder.forEach((key) => {
+    tabOrder.forEach((key, index) => {
       const tabData = tabMetadata[key];
       if (tabData) {
-        this.buttons[key] = this.createButton(tabData.label, tabData.icon);
-        this.buttonContainer.appendChild(this.buttons[key]);
+        const btn = this.createButton(tabData.label, tabData.icon);
+        btn.style.animation = `fadeInLeft 0.4s ease-out ${0.05 + index * 0.04}s both`;
+        this.buttons[key] = btn;
+        this.buttonContainer.appendChild(btn);
       }
     });
   }
@@ -238,17 +245,16 @@ export class ProxySidebar {
 
   // Set active button
   setActiveButton(buttonKey) {
-    console.log("setActiveButton called with:", buttonKey);
+    console.log("✅ setActiveButton called with:", buttonKey);
 
     // Remove active class from all buttons
     Object.entries(this.buttons).forEach(([key, btn]) => {
-      console.log("Removing active from:", key);
       btn.classList.remove("active");
     });
 
     // Add active class to selected button (if it exists and is not null)
     if (buttonKey && this.buttons[buttonKey]) {
-      console.log("Adding active to:", buttonKey);
+      console.log("✅ Adding active to:", buttonKey);
       this.buttons[buttonKey].classList.add("active");
     }
   }
@@ -308,8 +314,8 @@ export class ProxySidebar {
       /* Sidebar Container */
       .proxy-sidebar {
         background: #292d36;
-        border-right: 1px solid #404040;
-        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+        border-right: 2px solid rgba(0, 122, 204, 0.2);
+        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.3);
         transition: width 0.3s ease;
       }
 
@@ -342,13 +348,13 @@ export class ProxySidebar {
         border-bottom: 1px solid #404040;
         text-align: center;
         background: linear-gradient(135deg, #23272f, #2a2e37);
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .sidebar-header:hover {
         background: linear-gradient(135deg, #2a2e37, #323641);
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(var(--accent-color-rgb, 0, 191, 255), 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 191, 255, 0.15);
       }
 
       .sidebar-title {
@@ -356,7 +362,7 @@ export class ProxySidebar {
         font-size: 1.4rem;
         font-weight: 700;
         margin: 0 0 4px 0;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
       }
 
       .sidebar-subtitle {
@@ -371,7 +377,7 @@ export class ProxySidebar {
         padding: 12px 16px;
         margin-bottom: 4px;
         background: transparent;
-        border: none;
+        border: 2px solid transparent;
         border-radius: 8px;
         color: #d4d4d4;
         cursor: pointer;
@@ -381,24 +387,43 @@ export class ProxySidebar {
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.2s ease;
+        gap: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
       }
 
+      .sidebar-btn::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, transparent, rgba(0, 191, 255, 0.15), transparent);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+      }
+
+      .sidebar-btn:hover::before {
+        opacity: 1;
+        animation: shimmer 0.6s ease-in-out;
+      }
+
       .sidebar-btn:hover {
-        background: rgba(var(--accent-color-rgb, 0, 122, 204), 0.1);
+        background: rgba(0, 122, 204, 0.12);
+        border-color: rgba(0, 122, 204, 0.4);
         color: var(--accent-color);
         transform: translateX(4px);
       }
 
       .sidebar-btn.active {
-        background: var(--accent-color);
+        background: linear-gradient(135deg, rgba(0, 122, 204, 0.25), rgba(0, 191, 255, 0.15));
+        border-color: var(--accent-color);
         color: #fff;
-        box-shadow: 0 2px 8px rgba(var(--accent-color-rgb, 0, 122, 204), 0.3);
+        box-shadow: 0 2px 12px rgba(0, 122, 204, 0.4), inset 0 1px 2px rgba(0, 191, 255, 0.2);
+        font-weight: 600;
       }
 
-      .sidebar-btn.active::before {
+      .sidebar-btn.active::after {
         content: '';
         position: absolute;
         left: 0;
@@ -406,27 +431,33 @@ export class ProxySidebar {
         width: 3px;
         height: 100%;
         background: var(--accent-color);
+        border-radius: 0 2px 2px 0;
+        animation: slideInRight 0.3s ease-out;
       }
 
       .sidebar-btn.hide-btn {
-        background: #dc3545;
-        color: #fff;
+        background: rgba(220, 52, 69, 0.1);
+        color: #ff6b7a;
+        border-color: rgba(220, 52, 69, 0.3);
         margin-top: auto;
       }
 
       .sidebar-btn.hide-btn:hover {
-        background: #c82333;
+        background: rgba(220, 52, 69, 0.2);
+        border-color: #dc3545;
         transform: translateX(0);
       }
 
       .sidebar-btn.remove-btn {
-        background: #6f2232;
-        color: #fff;
+        background: rgba(111, 34, 50, 0.1);
+        color: #ff6b7a;
+        border-color: rgba(111, 34, 50, 0.3);
         margin-top: 8px;
       }
 
       .sidebar-btn.remove-btn:hover {
-        background: #5a1a28;
+        background: rgba(111, 34, 50, 0.2);
+        border-color: #6f2232;
         transform: translateX(0);
       }
 
@@ -447,7 +478,50 @@ export class ProxySidebar {
       }
 
       .proxy-sidebar ::-webkit-scrollbar-thumb:hover {
-        background: #525252;
+        background: var(--accent-color);
+      }
+
+      /* Animation Keyframes */
+      @keyframes slideInRight {
+        from {
+          opacity: 0;
+          transform: translateX(-3px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes slideInLeft {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes fadeInLeft {
+        from {
+          opacity: 0;
+          transform: translateX(-12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes shimmer {
+        0% {
+          background-position: -1000px 0;
+        }
+        100% {
+          background-position: 1000px 0;
+        }
       }
     `;
 
