@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aluben Chat</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            text-align: center;
+            margin: 20px 0;
+            color: #feca57;
+        }
+
+        p {
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            background: white;
+            box-shadow: 0 0 0 3px rgba(254, 202, 87, 0.5);
+        }
+
+        input:disabled {
+            background: rgba(255, 255, 255, 0.5);
+            color: #666;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-container ul {
+            list-style: none;
+        }
+
+        .chat-container li {
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #feca57;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .chat-container li strong {
+            color: #feca57;
+        }
+
+        .error {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 10px;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .status {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .status.connected {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+
+        .status.disconnected {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid rgba(231, 76, 60, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Scrollbar styling */
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: rgba(254, 202, 87, 0.5);
+            border-radius: 4px;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(254, 202, 87, 0.7);
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            main {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .input-container {
+                flex-direction: column;
+            }
+
+            input {
+                min-width: unset;
+            }
+
+            .chat-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Aluben Chat</h1>
+        <p>
+            Welcome to Aluben Chat, the one place where you can help each other or
+            wreak havoc. No moderation, no nothing.
+        </p>
+        
+        <div id="username-section">
+            <div class="input-container">
+                <input
+                    id="username-input"
+                    placeholder="Enter your username"
+                    maxlength="50"
+                />
+                <button id="join-button">Join Chat</button>
+            </div>
+        </div>
+
+        <div id="chat-section" style="display: none;">
+            <h2>Chatroom</h2>
+            <div id="connection-status" class="status disconnected">
+                Disconnected from server. Trying to reconnect...
+            </div>
+            <div class="chat-container" id="chat-container">
+                <ul id="messages-list"></ul>
+            </div>
+            <div class="input-container">
+                <input
+                    id="message-input"
+                    placeholder="Type a message..."
+                    disabled
+                    maxlength="500"
+                />
+                <button id="send-button" disabled>Send</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        class AlubenChat {
+            constructor() {
+                this.socket = null;
+                this.messages = [];
+                this.username = "";
+                this.isConnected = false;
+                
+                this.initializeElements();
+                this.initializeEventListeners();
+                this.connect();
+            }
+
+            initializeElements() {
+                this.usernameSection = document.getElementById('username-section');
+                this.chatSection = document.getElementById('chat-section');
+                this.usernameInput = document.getElementById('username-input');
+                this.joinButton = document.getElementById('join-button');
+                this.messageInput = document.getElementById('message-input');
+                this.sendButton = document.getElementById('send-button');
+                this.messagesList = document.getElementById('messages-list');
+                this.chatContainer = document.getElementById('chat-container');
+                this.connectionStatus = document.getElementById('connection-status');
+            }
+
+            initializeEventListeners() {
+                this.joinButton.addEventListener('click', () => this.joinChat());
+                this.usernameInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.joinChat();
+                });
+
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.sendMessage();
+                });
+            }
+
+            connect() {
+                try {
+                    this.socket = io("https://aluben-assets.onrender.com/");
+
+                    this.socket.on("connect", () => {
+                        console.log("Connected to server");
+                        this.isConnected = true;
+                        this.updateConnectionStatus(true);
+                        this.enableChatInputs();
+                    });
+
+                    this.socket.on("disconnect", () => {
+                        console.log("Disconnected from server");
+                        this.isConnected = false;
+                        this.updateConnectionStatus(false);
+                        this.disableChatInputs();
+                    });
+
+                    this.socket.on("chat message", (msg) => {
+                        this.addMessage(msg);
+                        this.scrollToBottom();
+                    });
+
+                    this.socket.on("connect_error", (error) => {
+                        console.error("Connection error:", error);
+                        this.updateConnectionStatus(false);
+                    });
+
+                } catch (error) {
+                    console.error("Failed to connect:", error);
+                    this.updateConnectionStatus(false);
+                    
+                    // Try to reconnect after 5 seconds
+                    setTimeout(() => this.connect(), 5000);
+                }
+
+                // Make initial fetch request
+                if (!this.isConnected) {
+                    fetch("https://aluben-assets.onrender.com/")
+                        .catch(error => console.error("Fetch error:", error));
+                }
+            }
+
+            joinChat() {
+                const username = this.usernameInput.value.trim();
+                if (username) {
+                    this.username = username;
+                    this.usernameSection.style.display = 'none';
+                    this.chatSection.style.display = 'block';
+                    this.messageInput.focus();
+                    
+                    if (this.isConnected) {
+                        this.enableChatInputs();
+                    }
+                } else {
+                    alert("Please enter a username");
+                    this.usernameInput.focus();
+                }
+            }
+
+            sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (message && this.username && this.isConnected) {
+                    this.socket.emit("chat message", {
+                        username: this.username,
+                        text: message
+                    });
+                    this.messageInput.value = "";
+                }
+            }
+
+            addMessage(msg) {
+                const messageElement = document.createElement('li');
+                messageElement.innerHTML = `<strong>${this.escapeHtml(msg.username)}:</strong> ${this.escapeHtml(msg.text)}`;
+                this.messagesList.appendChild(messageElement);
+                this.messages.push(msg);
+            }
+
+            scrollToBottom() {
+                setTimeout(() => {
+                    this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+                }, 0);
+            }
+
+            updateConnectionStatus(connected) {
+                if (connected) {
+                    this.connectionStatus.textContent = "Connected to server";
+                    this.connectionStatus.className = "status connected";
+                } else {
+                    this.connectionStatus.textContent = "Disconnected from server. Trying to reconnect...";
+                    this.connectionStatus.className = "status disconnected";
+                }
+            }
+
+            enableChatInputs() {
+                this.messageInput.disabled = false;
+                this.sendButton.disabled = false;
+            }
+
+            disableChatInputs() {
+                this.messageInput.disabled = true;
+                this.sendButton.disabled = true;
+            }
+
+            escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            disconnect() {
+                if (this.socket) {
+                    this.socket.disconnect();
+                }
+            }
+        }
+
+        // Initialize the chat when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.chatApp = new AlubenChat();
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (window.chatApp) {
+                window.chatApp.disconnect();
+            }
+        });
+    </script>
+</body>
+</html>

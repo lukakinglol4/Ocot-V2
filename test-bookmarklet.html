@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Bookmarklet Environment</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .test-info {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      #console-output {
+        background: #1e1e1e;
+        color: #fff;
+        padding: 15px;
+        border-radius: 4px;
+        font-family: monospace;
+        white-space: pre-wrap;
+        max-height: 400px;
+        overflow-y: auto;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="test-info">
+      <h1>Bookmarklet Test Environment</h1>
+      <p>
+        This page simulates running the Proxy Client as a bookmarklet on an
+        external website.
+      </p>
+      <p>
+        Click the button below to inject the Proxy Client bundle and check
+        console output.
+      </p>
+      <button onclick="loadProxyClient()">
+        Load Proxy Client (Bookmarklet Mode)
+      </button>
+    </div>
+
+    <div id="console-output"></div>
+
+    <script>
+      // Capture console output
+      const originalLog = console.log;
+      const originalWarn = console.warn;
+      const originalError = console.error;
+      const outputDiv = document.getElementById("console-output");
+
+      function addToOutput(level, args) {
+        const timestamp = new Date().toLocaleTimeString();
+        const message = args
+          .map((arg) =>
+            typeof arg === "object" ? JSON.stringify(arg, null, 2) : String(arg)
+          )
+          .join(" ");
+        outputDiv.textContent += `[${timestamp}] ${level.toUpperCase()}: ${message}\n`;
+        outputDiv.scrollTop = outputDiv.scrollHeight;
+      }
+
+      console.log = function (...args) {
+        addToOutput("log", args);
+        originalLog.apply(console, args);
+      };
+
+      console.warn = function (...args) {
+        addToOutput("warn", args);
+        originalWarn.apply(console, args);
+      };
+
+      console.error = function (...args) {
+        addToOutput("error", args);
+        originalError.apply(console, args);
+      };
+
+      function loadProxyClient() {
+        console.log("🔄 Loading Proxy Client in bookmarklet mode...");
+
+        // Clear previous output
+        outputDiv.textContent = "";
+
+        // Create script element to load the bundle
+        const script = document.createElement("script");
+        script.src = "./dist/bundle.js";
+        script.onload = () => {
+          console.log("✅ Bundle loaded successfully");
+          console.log("🔄 Attempting to initialize Proxy Client...");
+
+          // Give a moment for initialization, then check what happened
+          setTimeout(() => {
+            console.log("🔍 Checking if Proxy Client is available...");
+            if (window.ProxyClientApp) {
+              console.log("✅ ProxyClientApp found in window");
+
+              // Try to trigger the scripts view to test data loading
+              console.log("🔄 Testing scripts data loading...");
+              setTimeout(() => {
+                const scriptsButton = document.querySelector(
+                  '[data-view="scripts"]'
+                );
+                if (scriptsButton) {
+                  console.log(
+                    "🔍 Found scripts button, clicking to test data loading..."
+                  );
+                  scriptsButton.click();
+
+                  // Check if scripts loaded after a short delay
+                  setTimeout(() => {
+                    const scriptCards = document.querySelectorAll(
+                      ".script-card, .card"
+                    );
+                    console.log(
+                      `🔍 Found ${scriptCards.length} script cards after loading scripts view`
+                    );
+
+                    if (scriptCards.length > 0) {
+                      console.log("✅ Scripts loaded successfully!");
+                    } else {
+                      console.log(
+                        "❌ No scripts found - data loading may have failed"
+                      );
+                    }
+                  }, 500);
+                } else {
+                  console.log("❌ Scripts button not found");
+                }
+              }, 500);
+            } else {
+              console.log("❌ ProxyClientApp not found in window");
+            }
+          }, 1000);
+        };
+        script.onerror = () => {
+          console.error("❌ Failed to load bundle.js");
+        };
+
+        document.head.appendChild(script);
+      }
+    </script>
+  </body>
+</html>

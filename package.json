@@ -1,0 +1,47 @@
+{
+  "name": "proxy-client",
+  "version": "2.5.7",
+  "description": "A Ocot Client application with various functionalities.",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "node scripts/switch-env.js dev && concurrently \"tsc -w -p tsconfig.json\" \"node scripts/dev-server.js\"",
+    "dev:simple": "node scripts/switch-env.js dev && node scripts/simple-dev.js",
+    "serve": "npx http-server -p 8080 -c-1",
+    "update-version": "node scripts/update-version.js",
+    "build:ts": "npm run update-version && tsc -p tsconfig.json",
+    "bundle": "esbuild build/main.js --bundle --outfile=dist/bundle.js --format=iife --minify",
+    "build": "node scripts/switch-env.js prod && npm run build:ts && npm run bundle",
+    "build:watch": "node scripts/switch-env.js dev && concurrently \"tsc -w -p tsconfig.json\" \"esbuild build/main.js --bundle --outfile=dist/bundle.js --format=iife --watch\"",
+    "build:dev": "node scripts/switch-env.js dev && npm run build:ts && esbuild build/main.js --bundle --outfile=dist/bundle.js --format=iife --sourcemap",
+    "start": "npm run serve",
+    "test": "jest",
+    "clean": "node scripts/clean.js",
+    "env": "node scripts/switch-env.js",
+    "env:dev": "node scripts/switch-env.js dev && npm run build",
+    "env:prod": "node scripts/switch-env.js prod && npm run build"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.17",
+    "@types/node": "^20.0.0",
+    "concurrently": "^8.2.2",
+    "esbuild": "^0.25.9",
+    "jest": "^26.6.0",
+    "typescript": "^5.0.0",
+    "webpack": "^5.0.0",
+    "webpack-cli": "^4.0.0"
+  },
+  "keywords": [
+    "proxy",
+    "client",
+    "javascript",
+    "web"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
